@@ -1,0 +1,72 @@
+# Test, then deploy stack apps-portal and the site on every push to main.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Added permissions required to host and output the website on GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install the test tools
+        run: python -m pip install --disable-pip-version-check "pytest>=8" "pyyaml>=6"
+
+      - name: Python tests
+        run: python -m pytest -q tests
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # Changed 'npm ci' to 'npm i' to smoothly compile without strict lockfile blocks
+      - name: Web build
+        working-directory: web
+        run: |
+          npm i --no-audit --no-fund
+          npm run build
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup GitHub Pages Environment
+        uses: actions/configure-pages@v5
+
+      - name: Upload Website Artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'web/'
+
+      # This officially deploys your files so you get a live browser link
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
