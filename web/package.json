@@ -1,0 +1,10 @@
+{
+  "name": "apps-portal-web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Replace this line with your actual build command (e.g., next build, vite build, webpack)'"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
