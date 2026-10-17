@@ -1,9 +1,8 @@
-name: Deploy
+name: Manual Deploy
 
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+  # Removed push trigger to prevent automatic runs on code changes
+  workflow_dispatch: 
 
 # Added permissions required to host and output the website on GitHub Pages
 permissions:
@@ -62,7 +61,6 @@ jobs:
   # STAGE 3: Deploy to GitHub Pages
   deploy:
     needs: build_web
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
